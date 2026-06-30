@@ -9,12 +9,16 @@ app = Flask(__name__)
 app.secret_key = "eco_ruta_secret"
 UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "eco_ruta.db")
+
 # =====================================
 # CONEXIÓN A LA BASE DE DATOS
 # =====================================
 
 def conectar():
-    conexion = sqlite3.connect("eco_ruta.db")
+    conexion = sqlite3.connect(DB_PATH)
     conexion.row_factory = sqlite3.Row
     return conexion
 # =====================================
@@ -101,26 +105,32 @@ def login():
     return render_template('login.html')
 
 
-@app.route('/iniciar_sesion', methods=['POST'])
+@app.route('/iniciar_sesion', methods=['GET', 'POST'])
 def iniciar_sesion():
 
-    usuario    = request.form['usuario']
-    contrasena = request.form['contrasena']
+    if request.method == 'GET':
+        return redirect('/')
 
-    conexion = conectar()
-    cursor   = conexion.cursor()
+    usuario = request.form.get('usuario', '')
+    contrasena = request.form.get('contrasena', '')
 
-    cursor.execute("""
-        SELECT * FROM usuario
-        WHERE usuario = ?
-        AND contrasena = ?
-    """, (usuario, contrasena))
+    try:
+        conexion = conectar()
+        cursor = conexion.cursor()
 
-    usuario_encontrado = cursor.fetchone()
-    conexion.close()
+        cursor.execute("""
+            SELECT * FROM usuario
+            WHERE usuario = ?
+            AND contrasena = ?
+        """, (usuario, contrasena))
+
+        usuario_encontrado = cursor.fetchone()
+        conexion.close()
+    except sqlite3.OperationalError as e:
+        app.logger.error(f"Error de base de datos en login: {e}")
+        return render_template('login.html', error='Error de base de datos. Contacta al administrador.')
 
     if usuario_encontrado:
-
         session['usuario']    = usuario_encontrado['usuario']
         session['rol']        = usuario_encontrado['rol']
         session['nombre']     = usuario_encontrado['nombre']
@@ -1861,4 +1871,5 @@ def historial():
 # =====================================
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)

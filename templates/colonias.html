@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Colonias</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/colonias.css') }}">
+    <style>
+        #toast { display:none; position:fixed; bottom:30px; right:30px;
+            background:#2e7d32; color:#fff; padding:14px 24px;
+            border-radius:8px; font-size:15px;
+            box-shadow:0 4px 12px rgba(0,0,0,.2); z-index:9999; }
+        #buscador-tabla { width:100%; padding:9px 12px; border:1px solid #ccc;
+            border-radius:6px; font-size:14px; box-sizing:border-box; margin-bottom:12px; }
+        .btn-guardar { background:#2e7d32; color:#fff; border:none;
+            padding:10px 22px; border-radius:6px; cursor:pointer;
+            font-size:14px; font-weight:600; }
+        .btn-guardar:hover { background:#1b5e20; }
+        .editar { background:#1565c0; color:#fff !important; padding:5px 12px;
+            border-radius:5px; text-decoration:none; font-size:13px; margin-right:4px; }
+        .eliminar { background:#c62828; color:#fff !important; padding:5px 12px;
+            border-radius:5px; text-decoration:none; font-size:13px; }
+    </style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<div class="contenedor">
+    <div class="sidebar">
+        <h1>ECO-RUTA</h1>
+        <p>Sistema de Gestión</p>
+        <div class="linea"></div>
+        <ul>
+            <li><a href="/index">🏠 Inicio</a></li>
+            <li><a href="/colonias" class="activo">🏘️ Colonias</a></li>
+            <li><a href="/rutas">🛣️ Rutas</a></li>
+            <li><a href="/camiones">🚛 Camiones</a></li>
+            <li><a href="/responsables">👤 Responsables</a></li>
+            <li><a href="/asignaciones">📋 Asignaciones</a></li>
+            <li><a href="/evidencias">📄 Evidencias</a></li>
+            <li><a href="/observaciones">👁️ Observaciones</a></li>
+            <li><a href="/reportes">📊 Reportes</a></li>
+        </ul>
+    </div>
+
+    <div class="contenido">
+        <div class="header">
+            <h1>MÓDULO COLONIAS</h1>
+            <a href="/index" class="btn-regresar">← Volver al inicio</a>
+        </div>
+
+        <div class="card">
+            <h2>➕ Agregar colonia</h2>
+            <form action="/agregar_colonia" method="POST"
+                  onsubmit="return validar('nombre colonia')">
+                <div class="grupo">
+                    <label>Nombre</label>
+                    <input type="text" name="nombre" required>
+                </div>
+                <div class="grupo">
+                    <label>Código Postal</label>
+                    <input type="text" name="codigo_postal" required>
+                </div>
+                <button type="submit" class="btn-guardar">💾 Guardar</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>📋 Lista de colonias</h2>
+            <input type="text" id="buscador-tabla"
+                   placeholder="🔍 Buscar colonia..."
+                   oninput="filtrarTabla(this.value)">
+            <table id="tabla">
+                <tr>
+                    <th>ID</th><th>Nombre</th><th>Código Postal</th>
+                    <th>Estado</th><th>Acciones</th>
+                </tr>
+                {% for colonia in colonias %}
+                <tr>
+                    <td>{{ colonia.id_colonia }}</td>
+                    <td>{{ colonia.nombre }}</td>
+                    <td>{{ colonia.codigo_postal }}</td>
+                    <td>
+                        {% if colonia.estado == 'Ocupada' %}
+                            <span style="color:#c62828;font-weight:600;">🔴 Ocupada</span>
+                        {% else %}
+                            <span style="color:#2e7d32;font-weight:600;">🟢 Disponible</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="/editar_colonia/{{ colonia.id_colonia }}" class="editar">✏️ Editar</a>
+                        <a href="/eliminar_colonia/{{ colonia.id_colonia }}" class="eliminar"
+                           onclick="return confirmar('la colonia {{ colonia.nombre }}')">🗑️ Eliminar</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function filtrarTabla(texto) {
+    const term = texto.toLowerCase();
+    document.querySelectorAll('#tabla tr:not(:first-child)').forEach(f => {
+        f.style.display = f.innerText.toLowerCase().includes(term) ? '' : 'none';
+    });
+}
+function confirmar(nombre) {
+    return confirm(`⚠️ ¿Eliminar ${nombre}?\nEsta acción no se puede deshacer.`);
+}
+function validar(campo) {
+    return true; // HTML required ya valida
+}
+const p = new URLSearchParams(window.location.search);
+if (p.get('ok')) {
+    const msgs = { guardado:'✅ Colonia guardada', editado:'✅ Colonia actualizada', eliminado:'✅ Colonia eliminada' };
+    const t = document.getElementById('toast');
+    t.innerText = msgs[p.get('ok')] || '✅ Operación exitosa';
+    t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 3000);
+    history.replaceState({}, '', '/colonias');
+}
+</script>
+</body>
+</html>

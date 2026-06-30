@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Inicio ECO-RUTA</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/index.css') }}"
+    >
+
+</head>
+
+<body>
+
+<div class="contenedor">
+
+    <!-- SIDEBAR -->
+
+    <div class="sidebar">
+
+        <div class="logo">
+
+            <h1>SISTEMA ECO-RUTA</h1>
+
+            <p>Sistema de Gestión</p>
+
+        </div>
+
+        <div class="linea"></div>
+
+        <div class="menu">
+
+            <h2>MENÚ</h2>
+
+            <ul>
+
+                <li>
+                    <a href="/colonias">
+                        <span>🏘️ Colonias</span>
+                        ➜
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/rutas">
+                        <span>🛣️ Rutas</span>
+                        ➜
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/camiones">
+                        <span>🚛 Camiones</span>
+                        ➜
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/responsables">
+                        <span>👤 Responsables</span>
+                        ➜
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/asignaciones">
+                        <span>📋 Asignaciones</span>
+                        ➜
+                    </a>
+                </li>
+
+              
+                <!-- REPORTES CIUDADANOS -->
+                <li>
+                    <a href="/admin/reportes_ciudadanos">
+                        <span>📬 Reportes Ciudadanos</span>
+                        ➜
+                    </a>
+                </li>
+
+                <!-- CONTROL CHOFERES -->
+                <li>
+                    <a href="/control_admin">
+                        <span>🚛 Control Choferes</span>
+                        ➜
+                    </a>
+                </li>
+                <li>
+                    <a href="/historial">
+                        <span>🕓 Historial</span>
+                        ➜
+                    </a>
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+    <!-- CONTENIDO -->
+
+    <div class="contenido">
+
+        <!-- NAVBAR -->
+
+        <div class="navbar">
+
+            <div>
+
+                <h1>
+                    ¡Bienvenido, {{ rol }}!
+                </h1>
+
+                <p>
+                    Aquí tienes un resumen general del sistema.
+                </p>
+
+            </div>
+
+            <div class="usuario">
+
+                <span>
+                    {{ rol }}
+                </span>
+
+                <a href="/cerrar_sesion">
+
+                    <button>
+                        Cerrar Sesión
+                    </button>
+
+                </a>
+
+            </div>
+
+        </div>
+
+        <!-- TARJETAS -->
+
+        <div class="cards">
+
+            <a href="/colonias" class="card">
+                <h3>Colonias</h3>
+                <p>{{ colonias_count }}</p>
+            </a>
+
+            <a href="/rutas" class="card">
+                <h3>Rutas</h3>
+                <p>{{ rutas_count }}</p>
+            </a>
+
+            <a href="/camiones" class="card">
+                <h3>Camiones</h3>
+                <p>{{ camiones_count }}</p>
+            </a>
+
+            <a href="/asignaciones" class="card">
+                <h3>Asignaciones</h3>
+                <p>{{ asignaciones_count }}</p>
+            </a>
+
+        </div>
+
+        <!-- TABLA -->
+
+        <div class="tabla">
+
+            <h2>Últimas Recolecciones</h2>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Ruta</th>
+                        <th>Chofer</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for r in recolecciones %}
+                    <tr>
+
+                        <td>{{ r.id_asignacion }}</td>
+
+                        <td>{{ r.ruta }}</td>
+
+                        <td>{{ r.chofer }}</td>
+
+                        <td>
+    <span class="estado
+        {% if r.estado == 'Completado' %}estado-completado
+        {% elif r.estado == 'En curso' %}estado-encurso
+        {% elif r.estado == 'Cancelado' %}estado-cancelado
+        {% else %}estado-pendiente{% endif %}">
+        {{ r.estado or 'Pendiente' }}
+    </span>
+</td>
+
+                    </tr>
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <!-- FOOTER -->
+
+        <div class="footer">
+            © 2026 ECO-RUTA.
+            Todos los derechos reservados.
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>

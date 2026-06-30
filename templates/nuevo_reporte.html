@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Nuevo Reporte - ECO-RUTA</title>
+  <style>
+    body { margin:0; font-family: Arial, sans-serif; background:#f0f4f0; }
+    .header {
+      background:#2e7d32; color:white;
+      padding:16px 30px;
+      display:flex; justify-content:space-between; align-items:center;
+    }
+    .header h1 { margin:0; font-size:20px; }
+    .header a {
+      color:white; background:#555;
+      padding:7px 14px; border-radius:6px;
+      text-decoration:none; font-size:13px;
+    }
+    .contenido { padding:30px; max-width:600px; margin:auto; }
+    .card {
+      background:white; padding:30px;
+      border-radius:12px;
+      box-shadow:0 2px 10px rgba(0,0,0,0.08);
+    }
+    h2 { color:#2e7d32; margin-top:0; }
+    label { font-size:13px; color:#555; display:block; margin-bottom:4px; }
+    input, select, textarea {
+      width:100%; padding:10px;
+      border:1px solid #ccc; border-radius:6px;
+      box-sizing:border-box; margin-bottom:16px;
+      font-size:14px;
+    }
+    textarea { resize:vertical; }
+    button {
+      width:100%; padding:12px;
+      background:#2e7d32; color:white;
+      border:none; border-radius:7px;
+      font-size:15px; cursor:pointer;
+    }
+    button:hover { background:#1b5e20; }
+    .zona-archivos {
+      border:2px dashed #a5d6a7;
+      border-radius:8px;
+      padding:16px;
+      background:#f1f8e9;
+      margin-bottom:16px;
+      text-align:center;
+    }
+    .zona-archivos input[type="file"] {
+      border:none; background:transparent;
+      margin-bottom:6px; cursor:pointer;
+    }
+    .zona-archivos p {
+      font-size:12px; color:#888; margin:4px 0 0;
+    }
+    #previews {
+      display:flex; flex-wrap:wrap; gap:10px;
+      margin-top:10px; justify-content:center;
+    }
+    #previews img, #previews video {
+      width:100px; height:80px;
+      object-fit:cover;
+      border-radius:6px;
+      border:1px solid #ccc;
+    }
+    .badge-archivo {
+      font-size:11px; background:#e8f5e9;
+      color:#2e7d32; border-radius:4px;
+      padding:2px 6px; margin-top:4px;
+      display:inline-block;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>🌿 Nuevo Reporte</h1>
+    <a href="/ciudadano">← Regresar</a>
+  </div>
+
+  <div class="contenido">
+    <div class="card">
+      <h2>📋 Llena el formulario</h2>
+
+      <form action="/ciudadano/nuevo_reporte" method="POST" enctype="multipart/form-data">
+
+        <label>Colonia</label>
+        <select name="colonia" required>
+          <option value="">-- Selecciona una colonia --</option>
+          {% for id, nombre in colonias %}
+            <option value="{{ id }}">{{ nombre }}</option>
+          {% endfor %}
+        </select>
+
+        <label>Dirección</label>
+        <input type="text" name="direccion"
+               placeholder="Calle y número" required>
+
+        <label>Tipo de reporte</label>
+        <select name="tipo" required>
+          <option value="">-- Selecciona --</option>
+          <option value="Queja">Queja</option>
+          <option value="Sugerencia">Sugerencia</option>
+          <option value="Reporte de problema">Reporte de problema</option>
+        </select>
+
+        <label>Descripción</label>
+        <textarea name="descripcion" rows="4"
+          placeholder="Describe tu reporte con detalle..." required></textarea>
+
+        <label>📎 Fotos y/o Videos (opcional, puedes subir varios)</label>
+        <div class="zona-archivos">
+          <input
+            type="file"
+            name="archivos"
+            id="inputArchivos"
+            accept="image/*,video/*"
+            multiple
+            onchange="previsualizarArchivos(this)"
+          >
+          <p>Formatos aceptados: JPG, PNG, GIF, MP4, MOV, AVI — máx. 50 MB por archivo</p>
+          <div id="previews"></div>
+        </div>
+
+        <button type="submit">📤 Enviar Reporte</button>
+      </form>
+    </div>
+  </div>
+
+<script>
+  function previsualizarArchivos(input) {
+    const contenedor = document.getElementById('previews');
+    contenedor.innerHTML = '';
+
+    Array.from(input.files).forEach(archivo => {
+      const url = URL.createObjectURL(archivo);
+      const esVideo = archivo.type.startsWith('video/');
+      const wrapper = document.createElement('div');
+      wrapper.style.textAlign = 'center';
+
+      if (esVideo) {
+        const video = document.createElement('video');
+        video.src = url;
+        video.controls = true;
+        wrapper.appendChild(video);
+      } else {
+        const img = document.createElement('img');
+        img.src = url;
+        wrapper.appendChild(img);
+      }
+
+      const badge = document.createElement('span');
+      badge.className = 'badge-archivo';
+      badge.textContent = archivo.name.length > 15
+        ? archivo.name.substring(0, 15) + '...'
+        : archivo.name;
+
+      wrapper.appendChild(badge);
+      contenedor.appendChild(wrapper);
+    });
+  }
+</script>
+
+</body>
+</html>

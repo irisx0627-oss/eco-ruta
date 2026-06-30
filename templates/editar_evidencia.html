@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Evidencia</title>
+
+    <link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+<body>
+
+<h1>EDITAR EVIDENCIA</h1>
+
+<form
+action="/actualizar_evidencia/{{ evidencia.id_evidencia }}"
+method="POST"
+>
+
+<label>Fecha</label>
+<br>
+
+<input
+type="date"
+name="fecha"
+value="{{ evidencia.fecha }}"
+required>
+
+<br><br>
+
+<label>Tipo</label>
+<br>
+
+<select name="tipo">
+
+<option
+{% if evidencia.tipo == 'Foto' %}
+selected
+{% endif %}
+>
+Foto
+</option>
+
+<option
+{% if evidencia.tipo == 'Documento' %}
+selected
+{% endif %}
+>
+Documento
+</option>
+
+<option
+{% if evidencia.tipo == 'Registro' %}
+selected
+{% endif %}
+>
+Registro
+</option>
+
+</select>
+
+<br><br>
+
+<label>Descripción</label>
+<br>
+
+<textarea name="descripcion">
+{{ evidencia.descripcion }}
+</textarea>
+
+<br><br>
+
+<label>Asignación</label>
+<br>
+
+<select name="id_asignacion">
+
+{% for asignacion in asignaciones %}
+
+<option
+value="{{ asignacion.id_asignacion }}"
+{% if asignacion.id_asignacion == evidencia.id_asignacion %}
+selected
+{% endif %}
+>
+
+Asignación {{ asignacion.id_asignacion }}
+
+</option>
+
+{% endfor %}
+
+</select>
+
+<br><br>
+
+<button type="submit">
+Actualizar
+</button>
+
+</form>
+
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Reporte Ciudadano | ECO-RUTA</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+<body>
+
+<div class="contenedor-panel">
+
+    <main class="contenido">
+
+        <div class="header">
+
+            <div>
+
+                <h1>Reporte Ciudadano</h1>
+
+                <p>
+                    Reporta basura, quejas o sugerencias.
+                </p>
+
+            </div>
+
+        </div>
+
+        <div class="tabla-container">
+
+            <form
+                action="/guardar_reporte_ciudadano"
+                method="POST"
+                enctype="multipart/form-data"
+            >
+
+                <label>Nombre</label>
+
+                <input
+                    type="text"
+                    name="nombre"
+                    required
+                >
+
+                <br><br>
+
+                <label>Teléfono</label>
+
+                <input
+                    type="text"
+                    name="telefono"
+                    required
+                >
+
+                <br><br>
+
+                <label>Colonia</label>
+
+                <input
+                    type="text"
+                    name="colonia"
+                    required
+                >
+
+                <br><br>
+
+                <label>Dirección</label>
+
+                <input
+                    type="text"
+                    name="direccion"
+                    required
+                >
+
+                <br><br>
+
+                <label>Tipo</label>
+
+                <select name="tipo">
+
+                    <option>
+                        Reporte
+                    </option>
+
+                    <option>
+                        Queja
+                    </option>
+
+                    <option>
+                        Sugerencia
+                    </option>
+
+                </select>
+
+                <br><br>
+
+                <label>Descripción</label>
+
+                <textarea
+                    name="descripcion"
+                    required
+                ></textarea>
+
+                <br><br>
+
+                <label>Evidencia</label>
+
+                <input
+                    type="file"
+                    name="evidencia"
+                >
+
+                <br><br>
+
+                <button type="submit">
+                    Enviar Reporte
+                </button>
+
+            </form>
+
+        </div>
+
+    </main>
+
+</div>
+
+</body>
+
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Colonia</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="contenedor">
+
+    <div class="sidebar">
+        <h1>ECO-RUTA</h1>
+        <p>Sistema de Gestión</p>
+        <div class="linea"></div>
+        <ul>
+            <li><a href="/index">🏠 Inicio</a></li>
+            <li><a href="/colonias" class="activo">🏘️ Colonias</a></li>
+            <li><a href="/rutas">🛣️ Rutas</a></li>
+            <li><a href="/camiones">🚛 Camiones</a></li>
+            <li><a href="/responsables">👤 Responsables</a></li>
+            <li><a href="/asignaciones">📋 Asignaciones</a></li>
+            <li><a href="/evidencias">📄 Evidencias</a></li>
+            <li><a href="/observaciones">👁️ Observaciones</a></li>
+            <li><a href="/reportes">📊 Reportes</a></li>
+        </ul>
+    </div>
+
+    <div class="contenido">
+
+        <div class="header">
+            <h1>✏️ EDITAR COLONIA</h1>
+            <a href="/colonias" class="btn-regresar">← Volver a Colonias</a>
+        </div>
+
+        <div class="card">
+            <form action="/actualizar_colonia/{{ colonia.id_colonia }}" method="POST">
+
+                <div class="grupo">
+                    <label>Nombre</label>
+                    <input type="text" name="nombre"
+                           value="{{ colonia.nombre }}" required>
+                </div>
+
+                <div class="grupo">
+                    <label>Código Postal</label>
+                    <input type="text" name="codigo_postal"
+                           value="{{ colonia.codigo_postal }}" required>
+                </div>
+
+                <button type="submit" class="btn-guardar">💾 Actualizar</button>
+                <a href="/colonias" class="btn-cancelar">✖ Cancelar</a>
+
+            </form>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

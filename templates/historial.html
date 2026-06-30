@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Historial</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .filtros-form {
+            display: flex; flex-wrap: wrap; gap: 12px;
+            align-items: flex-end; margin-bottom: 8px;
+        }
+        .filtros-form .grupo { min-width: 160px; }
+        .btn-filtrar {
+            background: #1565c0; color: #fff; border: none;
+            padding: 9px 18px; border-radius: 6px;
+            cursor: pointer; font-size: 14px; font-weight: 600;
+        }
+        .btn-filtrar:hover { background: #0d47a1; }
+        .btn-limpiar {
+            background: #888; color: #fff; border: none;
+            padding: 9px 18px; border-radius: 6px;
+            text-decoration: none; font-size: 14px;
+        }
+        .ficha-historial {
+            border: 1px solid #ddd; border-radius: 10px;
+            padding: 14px 18px; margin-bottom: 14px;
+            background: #fff;
+        }
+        .ficha-header {
+            display: flex; justify-content: space-between;
+            align-items: center; flex-wrap: wrap; gap: 8px;
+        }
+        .badge-estado {
+            padding: 3px 12px; border-radius: 12px;
+            font-size: 12px; font-weight: 600; color: #fff;
+        }
+        .estado-pendiente   { background: #f9a825; }
+        .estado-completado  { background: #2e7d32; }
+        .estado-en-proceso  { background: #1565c0; }
+        .estado-otro        { background: #757575; }
+
+        .sub-lista {
+            margin-top: 10px; padding-top: 8px;
+            border-top: 1px dashed #ddd;
+        }
+        .sub-item {
+            font-size: 13px; color: #444; margin: 4px 0;
+            padding-left: 8px; border-left: 3px solid #e0e0e0;
+        }
+        .sin-datos { color: #aaa; font-size: 13px; font-style: italic; }
+        details > summary { cursor: pointer; font-weight: 600; color: #1565c0; }
+    </style>
+</head>
+
+<body>
+<div class="contenedor">
+
+    <div class="sidebar">
+        <h1>ECO-RUTA</h1>
+        <p>Sistema de Gestión</p>
+        <div class="linea"></div>
+        <ul>
+            <li><a href="/index">🏠 Inicio</a></li>
+            <li><a href="/colonias">🏘️ Colonias</a></li>
+            <li><a href="/rutas">🛣️ Rutas</a></li>
+            <li><a href="/camiones">🚛 Camiones</a></li>
+            <li><a href="/responsables">👤 Responsables</a></li>
+            <li><a href="/asignaciones">📋 Asignaciones</a></li>
+            <li><a href="/evidencias">📄 Evidencias</a></li>
+            <li><a href="/observaciones">👁️ Observaciones</a></li>
+            <li><a href="/reportes">📊 Reportes</a></li>
+            <li><a href="/historial" class="activo">🕓 Historial</a></li>
+        </ul>
+    </div>
+
+    <div class="contenido">
+
+        <div class="header">
+            <h1>HISTORIAL DE RUTAS Y EVIDENCIAS</h1>
+            <a href="/index" class="btn-regresar">← Volver al inicio</a>
+        </div>
+
+        <div class="card">
+            <h2>🔍 Filtrar historial</h2>
+            <form class="filtros-form" method="GET" action="/historial">
+
+                <div class="grupo">
+                    <label>Desde</label><br>
+                    <input type="date" name="fecha_inicio" value="{{ filtros.fecha_inicio }}">
+                </div>
+
+                <div class="grupo">
+                    <label>Hasta</label><br>
+                    <input type="date" name="fecha_fin" value="{{ filtros.fecha_fin }}">
+                </div>
+
+                <div class="grupo">
+                    <label>Ruta</label><br>
+                    <select name="id_ruta">
+                        <option value="">Todas</option>
+                        {% for r in rutas %}
+                        <option value="{{ r.id_ruta }}"
+                            {% if filtros.id_ruta|string == r.id_ruta|string %}selected{% endif %}>
+                            {{ r.nombre_ruta }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="grupo">
+                    <label>Chofer</label><br>
+                    <select name="id_responsable">
+                        <option value="">Todos</option>
+                        {% for resp in responsables %}
+                        <option value="{{ resp.id_responsable }}"
+                            {% if filtros.id_responsable|string == resp.id_responsable|string %}selected{% endif %}>
+                            {{ resp.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="grupo">
+                    <label>Estado</label><br>
+                    <select name="estado">
+                        <option value="">Todos</option>
+                        <option value="Pendiente"   {% if filtros.estado == 'Pendiente' %}selected{% endif %}>Pendiente</option>
+                        <option value="Completado"  {% if filtros.estado == 'Completado' %}selected{% endif %}>Completado</option>
+                        <option value="En proceso"  {% if filtros.estado == 'En proceso' %}selected{% endif %}>En proceso</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-filtrar">Filtrar</button>
+                <a href="/historial" class="btn-limpiar">Limpiar</a>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>📚 Actividades realizadas ({{ historial|length }})</h2>
+
+            {% if not historial %}
+                <p class="sin-datos">No hay registros con esos filtros.</p>
+            {% endif %}
+
+            {% for h in historial %}
+            <div class="ficha-historial">
+
+                <div class="ficha-header">
+                    <div>
+                        <strong>🛣️ {{ h.nombre_ruta }}</strong>
+                        — {{ h.distancia_km }} km
+                        <br>
+                        <small>📅 {{ h.fecha_asignacion }} &nbsp;|&nbsp; 🚛 {{ h.placas }} &nbsp;|&nbsp; 👤 {{ h.chofer }}</small>
+                    </div>
+                    <span class="badge-estado
+                        {% if h.estado == 'Completado' %}estado-completado
+                        {% elif h.estado == 'Pendiente' %}estado-pendiente
+                        {% elif h.estado == 'En proceso' %}estado-en-proceso
+                        {% else %}estado-otro{% endif %}">
+                        {{ h.estado }}
+                    </span>
+                </div>
+
+                {% if h.observacion_chofer %}
+                <p style="margin-top:8px;"><strong>Observación del chofer:</strong> {{ h.observacion_chofer }}</p>
+                {% endif %}
+
+                {% if h.evidencia_control %}
+                <p>
+                    <strong>Evidencia de control:</strong>
+                    <a href="/static/uploads/{{ h.evidencia_control }}" target="_blank">Ver archivo</a>
+                </p>
+                {% endif %}
+
+                <details class="sub-lista">
+                    <summary>📄 Evidencias registradas ({{ h.evidencias|length }})</summary>
+                    {% if h.evidencias %}
+                        {% for ev in h.evidencias %}
+                        <div class="sub-item">
+                            [{{ ev.fecha }}] <strong>{{ ev.tipo }}</strong> — {{ ev.descripcion }}
+                            {% if ev.archivo %}
+                                — <a href="/static/uploads/{{ ev.archivo }}" target="_blank">Ver archivo</a>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="sin-datos">Sin evidencias registradas.</p>
+                    {% endif %}
+                </details>
+
+                <details class="sub-lista">
+                    <summary>👁️ Observaciones registradas ({{ h.observaciones|length }})</summary>
+                    {% if h.observaciones %}
+                        {% for ob in h.observaciones %}
+                        <div class="sub-item">[{{ ob.fecha }}] {{ ob.comentario }}</div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="sin-datos">Sin observaciones registradas.</p>
+                    {% endif %}
+                </details>
+
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

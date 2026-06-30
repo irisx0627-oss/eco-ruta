@@ -1,0 +1,222 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+body{
+    width:100%;
+    height:100vh;
+    overflow:hidden;
+}
+
+.contenedor-login{
+    width:100%;
+    height:100vh;
+    display:flex;
+}
+
+/* IZQUIERDA */
+
+.lado-izquierdo{
+    width:50%;
+    height:100vh;
+
+    background-image:url("/static/img/fondo_eco_ruta.png");
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+}
+
+/* DERECHA */
+
+.lado-derecho{
+    width:50%;
+    height:100vh;
+
+    background:#0b742f;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+/* CARD LOGIN */
+
+.card-login{
+    width:500px;
+
+    background:white;
+
+    padding:50px;
+
+    border-radius:30px;
+
+    box-shadow:0 10px 30px rgba(0,0,0,0.3);
+
+    position:relative;
+
+    text-align:center;
+}
+
+/* ICONO */
+
+.icono-usuario{
+    width:100px;
+    height:100px;
+
+    background:white;
+
+    border-radius:50%;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    font-size:45px;
+
+    position:absolute;
+
+    top:-50px;
+    left:50%;
+
+    transform:translateX(-50%);
+
+    box-shadow:0 5px 15px rgba(0,0,0,0.2);
+}
+
+/* TITULOS */
+
+.card-login h2{
+    margin-top:30px;
+    font-size:55px;
+    color:#1f2937;
+}
+
+.card-login span{
+    display:block;
+    margin-top:10px;
+    margin-bottom:35px;
+    color:#666;
+    font-size:22px;
+}
+
+/* FORM */
+
+.card-login form{
+    text-align:left;
+}
+
+.card-login label{
+    font-size:22px;
+    font-weight:bold;
+    color:#1f2937;
+}
+
+.card-login input[type="text"],
+.card-login input[type="password"]{
+
+    width:100%;
+
+    padding:18px;
+
+    margin-top:10px;
+    margin-bottom:30px;
+
+    border:1px solid #ccc;
+
+    border-radius:12px;
+
+    font-size:18px;
+}
+
+.card-login input:focus{
+    outline:none;
+    border:1px solid #0b742f;
+}
+
+/* EXTRAS */
+
+.extras{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    margin-bottom:30px;
+}
+
+.recordar{
+    display:flex;
+    align-items:center;
+    gap:10px;
+
+    font-size:18px;
+}
+
+.extras a{
+    text-decoration:none;
+    color:#0b742f;
+    font-size:18px;
+}
+
+/* BOTON */
+
+button{
+    width:100%;
+
+    padding:18px;
+
+    background:#0b742f;
+    color:white;
+
+    border:none;
+
+    border-radius:12px;
+
+    font-size:28px;
+
+    cursor:pointer;
+
+    transition:0.3s;
+}
+
+button:hover{
+    background:#14532d;
+}
+
+/* FOOTER */
+
+.footer{
+    margin-top:30px;
+    text-align:center;
+    color:#777;
+    font-size:18px;
+}
+
+/* RESPONSIVE */
+
+@media(max-width:1000px){
+
+    .contenedor-login{
+        flex-direction:column;
+    }
+
+    .lado-izquierdo,
+    .lado-derecho{
+        width:100%;
+    }
+
+    .lado-izquierdo{
+        height:350px;
+    }
+
+    .card-login{
+        width:90%;
+    }
+
+    .card-login h2{
+        font-size:40px;
+    }
+
+}

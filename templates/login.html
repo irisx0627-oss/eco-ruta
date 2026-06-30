@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>LOGIN ECO-RUTA</title>
+
+    <link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/login.css') }}"
+    >
+
+</head>
+
+<body>
+
+<div class="contenedor-login">
+
+    <!-- IZQUIERDA -->
+
+    <div class="lado-izquierdo"></div>
+
+    <!-- DERECHA -->
+
+    <div class="lado-derecho">
+
+        <div class="card-login">
+
+            <div class="icono-usuario">
+                👤
+            </div>
+
+            <h2>Iniciar Sesión</h2>
+
+            <span>
+                Accede al sistema ECO-RUTA
+            </span>
+
+            {% if error %}
+            <p style="color:red; text-align:center; font-size:13px; margin-top:10px;">
+                ⚠️ {{ error }}
+            </p>
+            {% endif %}
+
+            <form action="/iniciar_sesion" method="POST">
+
+                <label>Usuario</label>
+
+                <input
+                type="text"
+                name="usuario"
+                placeholder="Ingrese su usuario"
+                required
+                >
+
+                <label>Contraseña</label>
+
+                <input
+                type="password"
+                name="contrasena"
+                placeholder="Ingrese su contraseña"
+                required
+                >
+
+                <div class="extras">
+
+                    <label class="recordar">
+
+                        <input type="checkbox">
+
+                        Recordarme
+
+                    </label>
+
+                    <a href="#">
+                        ¿Olvidaste tu contraseña?
+                    </a>
+
+                </div>
+
+                <button type="submit">
+                    🌿 Ingresar
+                </button>
+
+                <p style="text-align:center; margin-top:12px; font-size:13px; color:#555;">
+                    ¿No tienes cuenta?
+                    <a href="/registro" style="color:#2e7d32; font-weight:bold;">
+                        Regístrate aquí
+                    </a>
+                </p>
+
+            </form>
+
+            <div class="footer">
+                © 2026 ECO-RUTA
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

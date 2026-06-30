@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Asignaciones</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .buscador-wrap {
+            position: relative;
+            margin-bottom: 6px;
+        }
+        .buscador-wrap input {
+            width: 100%;
+            padding: 9px 12px 9px 34px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .buscador-wrap span {
+            position: absolute;
+            left: 10px; top: 50%;
+            transform: translateY(-50%);
+        }
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        /* Opciones ocupadas en rojo */
+        option.ocupado {
+            color: #c62828;
+            font-style: italic;
+        }
+        option.disponible {
+            color: #2e7d32;
+            font-weight: 600;
+        }
+
+        /* Info card debajo del select */
+        .info-estado {
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-top: 4px;
+            margin-bottom: 12px;
+            display: none;
+        }
+        .info-libre  { background:#e8f5e9; color:#2e7d32; border:1px solid #a5d6a7; }
+        .info-ocupado{ background:#ffebee; color:#c62828; border:1px solid #ef9a9a; }
+
+        .hint { font-size: 12px; color:#888; margin: 3px 0 10px; }
+
+        .btn-guardar {
+            background:#2e7d32; color:#fff; border:none;
+            padding:10px 24px; border-radius:6px;
+            cursor:pointer; font-size:14px; font-weight:600;
+        }
+        .btn-guardar:hover { background:#1b5e20; }
+        .editar {
+            background:#1565c0; color:#fff !important;
+            padding:5px 12px; border-radius:5px;
+            text-decoration:none; font-size:13px; margin-right:4px;
+        }
+        .eliminar {
+            background:#c62828; color:#fff !important;
+            padding:5px 12px; border-radius:5px;
+            text-decoration:none; font-size:13px;
+        }
+        #buscador-tabla {
+            width:100%; padding:9px 12px;
+            border:1px solid #ccc; border-radius:6px;
+            font-size:14px; box-sizing:border-box; margin-bottom:12px;
+        }
+        #toast {
+            display:none; position:fixed;
+            bottom:30px; right:30px;
+            background:#2e7d32; color:#fff;
+            padding:14px 24px; border-radius:8px;
+            font-size:15px; box-shadow:0 4px 12px rgba(0,0,0,.2);
+            z-index:9999;
+        }
+    </style>
+</head>
+<body>
+
+<div id="toast">✅ Asignación guardada correctamente</div>
+
+<div class="contenedor">
+
+    <div class="sidebar">
+        <h1>ECO-RUTA</h1>
+        <p>Sistema de Gestión</p>
+        <div class="linea"></div>
+        <ul>
+            <li><a href="/index">🏠 Inicio</a></li>
+            <li><a href="/colonias">🏘️ Colonias</a></li>
+            <li><a href="/rutas">🛣️ Rutas</a></li>
+            <li><a href="/camiones">🚛 Camiones</a></li>
+            <li><a href="/responsables">👤 Responsables</a></li>
+            <li><a href="/asignaciones" class="activo">📋 Asignaciones</a></li>
+            <li><a href="/evidencias">📄 Evidencias</a></li>
+            <li><a href="/observaciones">👁️ Observaciones</a></li>
+            <li><a href="/reportes">📊 Reportes</a></li>
+        </ul>
+    </div>
+
+    <div class="contenido">
+
+        <div class="header">
+            <h1>MÓDULO ASIGNACIONES</h1>
+            <a href="/index" class="btn-regresar">← Volver al inicio</a>
+        </div>
+
+        <div class="card">
+            <h2>➕ Nueva asignación</h2>
+
+            <form action="/agregar_asignacion" method="POST"
+                  onsubmit="return validarAsignacion()">
+
+                <div class="grupo">
+                    <label>📅 Fecha</label>
+                    <input type="date" name="fecha" id="fecha" required>
+                </div>
+
+                <!-- ── CHOFER ── -->
+                <div class="grupo">
+                    <label>👤 Chofer / Responsable</label>
+                    <div class="buscador-wrap">
+                        <span>🔍</span>
+                        <input type="text" placeholder="Buscar chofer..."
+                               oninput="filtrarSelect('sel-responsable', this.value)">
+                    </div>
+                    <select name="id_responsable" id="sel-responsable"
+                            onchange="mostrarInfoResponsable(this)" required>
+                        {% for r in responsables %}
+                        <option
+                            value="{{ r.id_responsable }}"
+                            data-ocupado="{{ r.ocupado }}"
+                            data-cargo="{{ r.cargo }}"
+                            class="{{ 'ocupado' if r.ocupado else 'disponible' }}">
+                            {% if r.ocupado %}🔴{% else %}🟢{% endif %}
+                            {{ r.nombre }} — {{ r.cargo }}
+                            {% if r.ocupado %} (YA ASIGNADO){% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div id="info-responsable" class="info-estado"></div>
+                </div>
+
+                <!-- ── RUTA ── -->
+                <div class="grupo">
+                    <label>🛣️ Ruta</label>
+                    <div class="buscador-wrap">
+                        <span>🔍</span>
+                        <input type="text" placeholder="Buscar ruta..."
+                               oninput="filtrarSelect('sel-ruta', this.value)">
+                    </div>
+                    <select name="id_ruta" id="sel-ruta"
+                            onchange="mostrarInfoRuta(this)" required>
+                        {% for ruta in rutas %}
+                        <option
+                            value="{{ ruta.id_ruta }}"
+                            data-ocupado="{{ ruta.ocupado }}"
+                            data-km="{{ ruta.distancia_km }}"
+                            class="{{ 'ocupado' if ruta.ocupado else 'disponible' }}">
+                            {% if ruta.ocupado %}🔴{% else %}🟢{% endif %}
+                            {{ ruta.nombre_ruta }} ({{ ruta.distancia_km }} km)
+                            {% if ruta.ocupado %} (YA ASIGNADA){% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div id="info-ruta" class="info-estado"></div>
+                </div>
+
+                <!-- ── CAMIÓN ── -->
+                <div class="grupo">
+                    <label>🚛 Camión</label>
+                    <div class="buscador-wrap">
+                        <span>🔍</span>
+                        <input type="text" placeholder="Buscar placas..."
+                               oninput="filtrarSelect('sel-camion', this.value)">
+                    </div>
+                    <select name="id_camion" id="sel-camion"
+                            onchange="mostrarInfoCamion(this)" required>
+                        {% for c in camiones %}
+                        <option
+                            value="{{ c.id_camion }}"
+                            data-estado="{{ c.estado }}"
+                            data-capacidad="{{ c.capacidad_kg }}"
+                            class="{{ 'ocupado' if c.estado != 'Activo' else 'disponible' }}">
+                            {% if c.estado == 'Activo' %}🟢{% else %}🔴{% endif %}
+                            {{ c.placas }} — {{ c.estado }} ({{ c.capacidad_kg }} kg)
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div id="info-camion" class="info-estado"></div>
+                </div>
+
+                <button type="submit" class="btn-guardar">💾 Guardar Asignación</button>
+            </form>
+        </div>
+
+        <!-- TABLA -->
+        <div class="card">
+            <h2>📋 Lista de asignaciones</h2>
+            <input type="text" id="buscador-tabla"
+                   placeholder="🔍 Buscar en la tabla..."
+                   oninput="filtrarTabla(this.value)">
+            <table id="tabla-asignaciones">
+                <tr>
+                    <th>ID</th>
+                    <th>Fecha</th>
+                    <th>Responsable</th>
+                    <th>Ruta</th>
+                    <th>Camión</th>
+                    <th>Acciones</th>
+                </tr>
+                {% for a in asignaciones %}
+                <tr>
+                    <td>{{ a.id_asignacion }}</td>
+                    <td>{{ a.fecha }}</td>
+                    <td>{{ a.nombre_responsable }}</td>
+                    <td>{{ a.nombre_ruta }}</td>
+                    <td>{{ a.placas }}</td>
+                    <td>
+                        <a href="/editar_asignacion/{{ a.id_asignacion }}" class="editar">✏️ Editar</a>
+                        <a href="/eliminar_asignacion/{{ a.id_asignacion }}" class="eliminar"
+                           onclick="return confirm('⚠️ ¿Eliminar asignación #{{ a.id_asignacion }}?\nEsto liberará el camión y el chofer.')">
+                            🗑️ Eliminar
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+    </div>
+</div>
+
+<script>
+/* ── Filtrar select ── */
+function filtrarSelect(id, texto) {
+    const sel = document.getElementById(id);
+    Array.from(sel.options).forEach(opt => {
+        opt.style.display = opt.text.toLowerCase()
+            .includes(texto.toLowerCase()) ? '' : 'none';
+    });
+}
+
+/* ── Info Responsable ── */
+function mostrarInfoResponsable(sel) {
+    const opt = sel.options[sel.selectedIndex];
+    const div = document.getElementById('info-responsable');
+    const ocupado = opt.dataset.ocupado === 'True' || opt.dataset.ocupado === '1';
+    div.style.display = 'block';
+    if (ocupado) {
+        div.className = 'info-estado info-ocupado';
+        div.innerHTML = '🔴 <strong>Este chofer ya tiene una asignación activa.</strong> Considera elegir otro.';
+    } else {
+        div.className = 'info-estado info-libre';
+        div.innerHTML = `🟢 <strong>Disponible</strong> — Cargo: ${opt.dataset.cargo}`;
+    }
+}
+
+/* ── Info Ruta ── */
+function mostrarInfoRuta(sel) {
+    const opt = sel.options[sel.selectedIndex];
+    const div = document.getElementById('info-ruta');
+    const ocupado = opt.dataset.ocupado === 'True' || opt.dataset.ocupado === '1';
+    div.style.display = 'block';
+    if (ocupado) {
+        div.className = 'info-estado info-ocupado';
+        div.innerHTML = '🔴 <strong>Esta ruta ya está asignada.</strong> Considera elegir otra.';
+    } else {
+        div.className = 'info-estado info-libre';
+        div.innerHTML = `🟢 <strong>Disponible</strong> — Distancia: ${opt.dataset.km} km`;
+    }
+}
+
+/* ── Info Camión ── */
+function mostrarInfoCamion(sel) {
+    const opt = sel.options[sel.selectedIndex];
+    const div = document.getElementById('info-camion');
+    const activo = opt.dataset.estado === 'Activo';
+    div.style.display = 'block';
+    if (!activo) {
+        div.className = 'info-estado info-ocupado';
+        div.innerHTML = `🔴 <strong>Estado: ${opt.dataset.estado}</strong> — Este camión no está disponible.`;
+    } else {
+        div.className = 'info-estado info-libre';
+        div.innerHTML = `🟢 <strong>Activo</strong> — Capacidad: ${opt.dataset.capacidad} kg`;
+    }
+}
+
+/* ── Filtrar tabla ── */
+function filtrarTabla(texto) {
+    const term = texto.toLowerCase();
+    document.querySelectorAll('#tabla-asignaciones tr:not(:first-child)')
+        .forEach(fila => {
+            fila.style.display =
+                fila.innerText.toLowerCase().includes(term) ? '' : 'none';
+        });
+}
+
+/* ── Validar antes de guardar ── */
+function validarAsignacion() {
+    const camionSel = document.getElementById('sel-camion');
+    const opt = camionSel.options[camionSel.selectedIndex];
+    if (opt.dataset.estado !== 'Activo') {
+        return confirm(`⚠️ El camión seleccionado está en estado "${opt.dataset.estado}".\n¿Deseas asignarlo de todas formas?`);
+    }
+    return true;
+}
+
+/* ── Toast ── */
+const params = new URLSearchParams(window.location.search);
+if (params.get('guardado') === '1') {
+    const t = document.getElementById('toast');
+    t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 3000);
+    history.replaceState({}, '', '/asignaciones');
+}
+</script>
+
+</body>
+</html>

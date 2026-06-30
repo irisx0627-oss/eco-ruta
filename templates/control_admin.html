@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Control Choferes | ECO-RUTA</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/index.css') }}"
+    >
+
+</head>
+
+<body>
+
+<div class="contenedor">
+
+    <!-- SIDEBAR -->
+
+    <div class="sidebar">
+
+        <div class="logo">
+
+            <h1>SISTEMA ECO-RUTA</h1>
+
+            <p>Sistema de Gestión</p>
+
+        </div>
+
+        <div class="linea"></div>
+
+        <div class="menu">
+
+            <h2>MENÚ</h2>
+
+            <ul>
+
+                <li>
+                    <a href="/index">
+                        <span>🏠 Inicio</span>
+                        ➜
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/colonias">
+                        <span>🏘️ Colonias</span>
+                        ➜
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/rutas">
+                        <span>🛣️ Rutas</span>
+                        ➜
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/camiones">
+                        <span>🚛 Camiones</span>
+                        ➜
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/responsables">
+                        <span>👤 Responsables</span>
+                        ➜
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/asignaciones">
+                        <span>📋 Asignaciones</span>
+                        ➜
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/control_admin">
+                        <span>🚛 Control Choferes</span>
+                        ➜
+                    </a>
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+    <!-- CONTENIDO -->
+
+    <div class="contenido">
+
+        <!-- NAVBAR -->
+
+        <div class="navbar">
+
+            <div>
+
+                <h1>Control General de Choferes</h1>
+
+                <p>Evidencias y observaciones enviadas.</p>
+
+            </div>
+
+            <div class="usuario">
+
+                <span>administrador</span>
+
+                <a href="/cerrar_sesion">
+
+                    <button>Cerrar Sesión</button>
+
+                </a>
+
+            </div>
+
+        </div>
+
+        <!-- TABLA -->
+
+        <div class="tabla">
+
+            <h2>Registros de Choferes</h2>
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>Fecha</th>
+                        <th>Ruta</th>
+                        <th>Camión</th>
+                        <th>Estado</th>
+                        <th>Observación</th>
+                        <th>Evidencia</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for c in controles %}
+
+                    <tr>
+
+                        <td>{{ c.fecha }}</td>
+
+                        <td>{{ c.nombre_ruta }}</td>
+
+                        <td>{{ c.placas }}</td>
+
+                        <td>
+                            <span class="estado">
+                                {{ c.estado }}
+                            </span>
+                        </td>
+
+                        <td>{{ c.observacion }}</td>
+
+                        <td>
+
+                            {% if c.evidencia %}
+
+                                <a href="{{ url_for('static', filename='uploads/' + c.evidencia) }}"
+                                target="_blank">
+                                    Ver archivo
+                                </a>
+
+                            {% else %}
+
+                                Sin evidencia
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <!-- FOOTER -->
+
+        <div class="footer">
+
+            © 2026 ECO-RUTA.
+            Todos los derechos reservados.
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>

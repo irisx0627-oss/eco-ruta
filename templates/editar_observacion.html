@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Observación</title>
+
+    <link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+<body>
+
+<h1>EDITAR OBSERVACIÓN</h1>
+
+<form
+action="/actualizar_observacion/{{ observacion.id_observacion }}"
+method="POST"
+>
+
+<label>Comentario</label>
+<br>
+
+<textarea
+name="comentario"
+rows="4"
+cols="40"
+required
+>{{ observacion.comentario }}</textarea>
+
+<br><br>
+
+<label>Fecha</label>
+<br>
+
+<input
+type="date"
+name="fecha"
+value="{{ observacion.fecha }}"
+required
+>
+
+<br><br>
+
+<label>Asignación</label>
+<br>
+
+<select name="id_asignacion">
+
+{% for asignacion in asignaciones %}
+
+<option
+value="{{ asignacion.id_asignacion }}"
+{% if asignacion.id_asignacion == observacion.id_asignacion %}
+selected
+{% endif %}
+>
+
+Asignación {{ asignacion.id_asignacion }}
+
+</option>
+
+{% endfor %}
+
+</select>
+
+<br><br>
+
+<button type="submit">
+Actualizar
+</button>
+
+</form>
+
+</body>
+</html>

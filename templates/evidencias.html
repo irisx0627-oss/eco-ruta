@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Evidencias</title>
+
+    <link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+<body>
+
+<h1>MÓDULO EVIDENCIAS</h1>
+
+<a href="/index">Volver al inicio</a>
+
+<hr>
+
+<h2>Agregar evidencia</h2>
+
+<form
+action="/agregar_evidencia"
+method="POST"
+enctype="multipart/form-data"
+>
+
+<label>Fecha</label>
+<br>
+
+<input type="date" name="fecha" required>
+
+<br><br>
+
+<label>Tipo</label>
+<br>
+
+<select name="tipo">
+
+    <option>Foto</option>
+    <option>Documento</option>
+    <option>Registro</option>
+
+</select>
+
+<br><br>
+
+<label>Descripción</label>
+<br>
+
+<textarea
+name="descripcion"
+rows="4"
+cols="40"
+></textarea>
+
+<br><br>
+
+<label>Archivo</label>
+<br>
+
+<input
+type="file"
+name="archivo"
+required
+>
+
+<br><br>
+
+<label>Asignación</label>
+<br>
+
+<select name="id_asignacion">
+
+{% for asignacion in asignaciones %}
+
+<option value="{{ asignacion.id_asignacion }}">
+
+    Asignación {{ asignacion.id_asignacion }}
+
+</option>
+
+{% endfor %}
+
+</select>
+
+<br><br>
+
+<button type="submit">
+Guardar
+</button>
+
+</form>
+
+<hr>
+
+<h2>Lista de evidencias</h2>
+
+<table border="1">
+
+<tr>
+
+    <th>ID</th>
+    <th>Fecha</th>
+    <th>Tipo</th>
+    <th>Descripción</th>
+    <th>Archivo</th>
+    <th>Asignación</th>
+    <th>Acciones</th>
+
+</tr>
+
+{% for evidencia in evidencias %}
+
+<tr>
+
+    <td>{{ evidencia.id_evidencia }}</td>
+
+    <td>{{ evidencia.fecha }}</td>
+
+    <td>{{ evidencia.tipo }}</td>
+
+    <td>{{ evidencia.descripcion }}</td>
+
+    <td>
+
+        {% if evidencia.archivo %}
+
+        <a
+        href="/static/uploads/{{ evidencia.archivo }}"
+        target="_blank"
+        >
+            Ver archivo
+        </a>
+
+        {% else %}
+
+            Sin archivo
+
+        {% endif %}
+
+    </td>
+
+    <td>{{ evidencia.id_asignacion }}</td>
+
+    <td>
+
+        <a href="/editar_evidencia/{{ evidencia.id_evidencia }}">
+            Editar
+        </a>
+
+        |
+
+        <a href="/eliminar_evidencia/{{ evidencia.id_evidencia }}">
+            Eliminar
+        </a>
+
+    </td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</body>
+</html>

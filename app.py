@@ -1,26 +1,25 @@
 from flask import Flask, render_template, request, redirect, session
-import sqlite3
+import psycopg2
+import psycopg2.extras
 from werkzeug.utils import secure_filename
 import os
 from datetime import datetime
-from datetime import datetime
-import os
+
 app = Flask(__name__)
 app.secret_key = "eco_ruta_secret"
 UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "eco_ruta.db")
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
 # =====================================
 # CONEXIÓN A LA BASE DE DATOS
 # =====================================
 
 def conectar():
-    conexion = sqlite3.connect(DB_PATH)
-    conexion.row_factory = sqlite3.Row
+    conexion = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
     return conexion
+
 # =====================================
 # INDEX
 # =====================================
@@ -31,23 +30,21 @@ def index():
     if 'usuario' not in session:
         return redirect('/')
 
-    conexion = sqlite3.connect('eco_ruta.db')
-    conexion.row_factory = sqlite3.Row
-
+    conexion = conectar()
     cursor = conexion.cursor()
 
     # CONTADORES
     cursor.execute("SELECT COUNT(*) FROM colonia")
-    colonias_count = cursor.fetchone()[0]
+    colonias_count = cursor.fetchone()['count']
 
     cursor.execute("SELECT COUNT(*) FROM ruta")
-    rutas_count = cursor.fetchone()[0]
+    rutas_count = cursor.fetchone()['count']
 
     cursor.execute("SELECT COUNT(*) FROM camion")
-    camiones_count = cursor.fetchone()[0]
+    camiones_count = cursor.fetchone()['count']
 
     cursor.execute("SELECT COUNT(*) FROM asignacion")
-    asignaciones_count = cursor.fetchone()[0]
+    asignaciones_count = cursor.fetchone()['count']
 
     # CONSULTA REAL DEL CONTROL CHOFER
     cursor.execute("""
@@ -120,13 +117,13 @@ def iniciar_sesion():
 
         cursor.execute("""
             SELECT * FROM usuario
-            WHERE usuario = ?
-            AND contrasena = ?
+            WHERE usuario = %s
+            AND contrasena = %s
         """, (usuario, contrasena))
 
         usuario_encontrado = cursor.fetchone()
         conexion.close()
-    except sqlite3.OperationalError as e:
+    except psycopg2.OperationalError as e:
         app.logger.error(f"Error de base de datos en login: {e}")
         return render_template('login.html', error='Error de base de datos. Contacta al administrador.')
 
@@ -145,8 +142,6 @@ def iniciar_sesion():
 
     return render_template('login.html', error='Usuario o contraseña incorrectos')
 
-    
-
 
 # =====================================
 # CERRAR SESION
@@ -158,7 +153,6 @@ def cerrar_sesion():
     session.clear()
 
     return redirect('/')
-
 
 
 # =====================================
@@ -202,7 +196,7 @@ def agregar_colonia():
 
     cursor.execute("""
         INSERT INTO colonia (nombre, codigo_postal, estado)
-        VALUES (?, ?, 'Disponible')
+        VALUES (%s, %s, 'Disponible')
     """, (nombre, codigo_postal))
 
     conexion.commit()
@@ -221,7 +215,7 @@ def eliminar_colonia(id):
     conexion = conectar()
     cursor   = conexion.cursor()
 
-    cursor.execute("DELETE FROM colonia WHERE id_colonia = ?", (id,))
+    cursor.execute("DELETE FROM colonia WHERE id_colonia = %s", (id,))
 
     conexion.commit()
     conexion.close()
@@ -239,7 +233,7 @@ def editar_colonia(id):
     conexion = conectar()
     cursor   = conexion.cursor()
 
-    cursor.execute("SELECT * FROM colonia WHERE id_colonia = ?", (id,))
+    cursor.execute("SELECT * FROM colonia WHERE id_colonia = %s", (id,))
     colonia = cursor.fetchone()
 
     conexion.close()
@@ -262,18 +256,14 @@ def actualizar_colonia(id):
 
     cursor.execute("""
         UPDATE colonia
-        SET nombre = ?, codigo_postal = ?
-        WHERE id_colonia = ?
+        SET nombre = %s, codigo_postal = %s
+        WHERE id_colonia = %s
     """, (nombre, codigo_postal, id))
 
     conexion.commit()
     conexion.close()
 
     return redirect('/colonias')
-
-# =====================================
-# MOSTRAR RUTAS
-# =====================================
 
 # =====================================
 # MOSTRAR RUTAS
@@ -296,7 +286,7 @@ def rutas():
             SELECT colonia.nombre
             FROM ruta_colonia
             INNER JOIN colonia ON ruta_colonia.id_colonia = colonia.id_colonia
-            WHERE ruta_colonia.id_ruta = ?
+            WHERE ruta_colonia.id_ruta = %s
         """, (ruta['id_ruta'],))
         colonias_ruta = [row['nombre'] for row in cursor.fetchall()]
         ruta_dict = dict(ruta)
@@ -331,18 +321,20 @@ def agregar_ruta():
 
     cursor.execute("""
         INSERT INTO ruta (nombre_ruta, descripcion, distancia_km)
-        VALUES (?, ?, ?)
+        VALUES (%s, %s, %s)
+        RETURNING id_ruta
     """, (nombre_ruta, descripcion, distancia_km))
 
-    id_nueva_ruta = cursor.lastrowid
+    id_nueva_ruta = cursor.fetchone()['id_ruta']
 
     for id_colonia in ids_colonia:
         cursor.execute("""
-            INSERT OR IGNORE INTO ruta_colonia (id_ruta, id_colonia)
-            VALUES (?, ?)
+            INSERT INTO ruta_colonia (id_ruta, id_colonia)
+            VALUES (%s, %s)
+            ON CONFLICT DO NOTHING
         """, (id_nueva_ruta, id_colonia))
         cursor.execute("""
-            UPDATE colonia SET estado = 'Ocupada' WHERE id_colonia = ?
+            UPDATE colonia SET estado = 'Ocupada' WHERE id_colonia = %s
         """, (id_colonia,))
 
     conexion.commit()
@@ -361,22 +353,22 @@ def eliminar_ruta(id):
     conexion = conectar()
     cursor = conexion.cursor()
 
-    cursor.execute("SELECT id_colonia FROM ruta_colonia WHERE id_ruta = ?", (id,))
+    cursor.execute("SELECT id_colonia FROM ruta_colonia WHERE id_ruta = %s", (id,))
     colonias_de_ruta = [row['id_colonia'] for row in cursor.fetchall()]
 
     for id_colonia in colonias_de_ruta:
         cursor.execute("""
             SELECT COUNT(*) as total FROM ruta_colonia
-            WHERE id_colonia = ? AND id_ruta != ?
+            WHERE id_colonia = %s AND id_ruta != %s
         """, (id_colonia, id))
         otras = cursor.fetchone()['total']
         if otras == 0:
             cursor.execute("""
-                UPDATE colonia SET estado = 'Disponible' WHERE id_colonia = ?
+                UPDATE colonia SET estado = 'Disponible' WHERE id_colonia = %s
             """, (id_colonia,))
 
-    cursor.execute("DELETE FROM ruta_colonia WHERE id_ruta = ?", (id,))
-    cursor.execute("DELETE FROM ruta WHERE id_ruta = ?", (id,))
+    cursor.execute("DELETE FROM ruta_colonia WHERE id_ruta = %s", (id,))
+    cursor.execute("DELETE FROM ruta WHERE id_ruta = %s", (id,))
 
     conexion.commit()
     conexion.close()
@@ -394,10 +386,10 @@ def editar_ruta(id):
     conexion = conectar()
     cursor = conexion.cursor()
 
-    cursor.execute("SELECT * FROM ruta WHERE id_ruta = ?", (id,))
+    cursor.execute("SELECT * FROM ruta WHERE id_ruta = %s", (id,))
     ruta = cursor.fetchone()
 
-    cursor.execute("SELECT id_colonia FROM ruta_colonia WHERE id_ruta = ?", (id,))
+    cursor.execute("SELECT id_colonia FROM ruta_colonia WHERE id_ruta = %s", (id,))
     ids_asignadas = {row['id_colonia'] for row in cursor.fetchall()}
 
     cursor.execute("SELECT id_colonia, nombre, estado FROM colonia ORDER BY nombre")
@@ -429,33 +421,34 @@ def actualizar_ruta(id):
     cursor = conexion.cursor()
 
     cursor.execute("""
-        UPDATE ruta SET nombre_ruta = ?, descripcion = ?, distancia_km = ?
-        WHERE id_ruta = ?
+        UPDATE ruta SET nombre_ruta = %s, descripcion = %s, distancia_km = %s
+        WHERE id_ruta = %s
     """, (nombre_ruta, descripcion, distancia_km, id))
 
-    cursor.execute("SELECT id_colonia FROM ruta_colonia WHERE id_ruta = ?", (id,))
+    cursor.execute("SELECT id_colonia FROM ruta_colonia WHERE id_ruta = %s", (id,))
     ids_anteriores = {row['id_colonia'] for row in cursor.fetchall()}
     ids_nuevas_set = {int(x) for x in ids_nuevas}
 
     for id_col in ids_anteriores - ids_nuevas_set:
         cursor.execute("""
             SELECT COUNT(*) as total FROM ruta_colonia
-            WHERE id_colonia = ? AND id_ruta != ?
+            WHERE id_colonia = %s AND id_ruta != %s
         """, (id_col, id))
         otras = cursor.fetchone()['total']
         if otras == 0:
             cursor.execute("""
-                UPDATE colonia SET estado = 'Disponible' WHERE id_colonia = ?
+                UPDATE colonia SET estado = 'Disponible' WHERE id_colonia = %s
             """, (id_col,))
 
-    cursor.execute("DELETE FROM ruta_colonia WHERE id_ruta = ?", (id,))
+    cursor.execute("DELETE FROM ruta_colonia WHERE id_ruta = %s", (id,))
 
     for id_col in ids_nuevas_set:
         cursor.execute("""
-            INSERT OR IGNORE INTO ruta_colonia (id_ruta, id_colonia) VALUES (?, ?)
+            INSERT INTO ruta_colonia (id_ruta, id_colonia) VALUES (%s, %s)
+            ON CONFLICT DO NOTHING
         """, (id, id_col))
         cursor.execute("""
-            UPDATE colonia SET estado = 'Ocupada' WHERE id_colonia = ?
+            UPDATE colonia SET estado = 'Ocupada' WHERE id_colonia = %s
         """, (id_col,))
 
     conexion.commit()
@@ -468,7 +461,7 @@ def actualizar_ruta(id):
 
 @app.route('/camiones')
 def camiones():
-        
+
     if session.get('rol') != 'administrador':
         return "No tienes permiso"
 
@@ -509,7 +502,7 @@ def agregar_camion():
             capacidad_kg,
             estado
         )
-        VALUES (?, ?, ?)
+        VALUES (%s, %s, %s)
     """, (
         placas,
         capacidad_kg,
@@ -533,7 +526,7 @@ def eliminar_camion(id):
 
     cursor.execute("""
         DELETE FROM camion
-        WHERE id_camion = ?
+        WHERE id_camion = %s
     """, (id,))
 
     conexion.commit()
@@ -553,7 +546,7 @@ def editar_camion(id):
 
     cursor.execute("""
         SELECT * FROM camion
-        WHERE id_camion = ?
+        WHERE id_camion = %s
     """, (id,))
 
     camion = cursor.fetchone()
@@ -581,10 +574,10 @@ def actualizar_camion(id):
 
     cursor.execute("""
         UPDATE camion
-        SET placas = ?,
-            capacidad_kg = ?,
-            estado = ?
-        WHERE id_camion = ?
+        SET placas = %s,
+            capacidad_kg = %s,
+            estado = %s
+        WHERE id_camion = %s
     """, (
         placas,
         capacidad_kg,
@@ -644,7 +637,7 @@ def agregar_responsable():
             telefono,
             licencia
         )
-        VALUES (?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s)
     """, (
         nombre,
         cargo,
@@ -669,7 +662,7 @@ def eliminar_responsable(id):
 
     cursor.execute("""
         DELETE FROM responsable
-        WHERE id_responsable = ?
+        WHERE id_responsable = %s
     """, (id,))
 
     conexion.commit()
@@ -689,7 +682,7 @@ def editar_responsable(id):
 
     cursor.execute("""
         SELECT * FROM responsable
-        WHERE id_responsable = ?
+        WHERE id_responsable = %s
     """, (id,))
 
     responsable = cursor.fetchone()
@@ -718,11 +711,11 @@ def actualizar_responsable(id):
 
     cursor.execute("""
         UPDATE responsable
-        SET nombre = ?,
-            cargo = ?,
-            telefono = ?,
-            licencia = ?
-        WHERE id_responsable = ?
+        SET nombre = %s,
+            cargo = %s,
+            telefono = %s,
+            licencia = %s
+        WHERE id_responsable = %s
     """, (
         nombre,
         cargo,
@@ -745,12 +738,9 @@ def panel_chofer():
     if 'usuario' not in session:
         return redirect('/')
 
-    conexion = sqlite3.connect('eco_ruta.db')
-    conexion.row_factory = sqlite3.Row
-
+    conexion = conectar()
     cursor = conexion.cursor()
 
-    # TRAER ASIGNACIONES + CONTROL DEL CHOFER
     cursor.execute("""
 
         SELECT
@@ -806,9 +796,9 @@ def actualizar_estado(id):
 
     cursor.execute("""
         UPDATE asignacion
-        SET estado = ?,
-            comentario_chofer = ?
-        WHERE id_asignacion = ?
+        SET estado = %s,
+            comentario_chofer = %s
+        WHERE id_asignacion = %s
     """, (
         estado,
         comentario,
@@ -819,12 +809,12 @@ def actualizar_estado(id):
     conexion.close()
 
     return redirect('/panel_chofer')
+
+
 @app.route("/control_chofer")
 def control_chofer():
 
-    conexion = sqlite3.connect("eco_ruta.db")
-    conexion.row_factory = sqlite3.Row
-
+    conexion = conectar()
     cursor = conexion.cursor()
 
     # TABLA CONTROL
@@ -908,7 +898,7 @@ def guardar_control_chofer():
 
             archivo.save(ruta_guardado)
 
-    conexion = sqlite3.connect('eco_ruta.db')
+    conexion = conectar()
     cursor = conexion.cursor()
 
     # VERIFICAR SI YA EXISTE CONTROL
@@ -916,7 +906,7 @@ def guardar_control_chofer():
 
         SELECT id_control
         FROM control_chofer
-        WHERE id_asignacion = ?
+        WHERE id_asignacion = %s
 
     """, (id_asignacion,))
 
@@ -930,12 +920,12 @@ def guardar_control_chofer():
             UPDATE control_chofer
 
             SET
-                estado = ?,
-                observacion = ?,
-                evidencia = ?,
-                fecha = ?
+                estado = %s,
+                observacion = %s,
+                evidencia = %s,
+                fecha = %s
 
-            WHERE id_asignacion = ?
+            WHERE id_asignacion = %s
 
         """, (
 
@@ -961,7 +951,7 @@ def guardar_control_chofer():
                 fecha
             )
 
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s)
 
         """, (
 
@@ -987,10 +977,7 @@ def control_admin():
     if 'usuario' not in session:
         return redirect('/')
 
-    conexion = sqlite3.connect('eco_ruta.db')
-
-    conexion.row_factory = sqlite3.Row
-
+    conexion = conectar()
     cursor = conexion.cursor()
 
     cursor.execute("""
@@ -1025,7 +1012,7 @@ def control_admin():
     return render_template(
         'control_admin.html',
         controles=controles
-    )                
+    )
 # =====================================
 # MOSTRAR ASIGNACIONES
 # =====================================
@@ -1106,13 +1093,12 @@ def agregar_asignacion():
 
     cursor.execute("""
         INSERT INTO asignacion (fecha, id_responsable, id_ruta, id_camion)
-        VALUES (?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s)
     """, (fecha, id_responsable, id_ruta, id_camion))
 
     conexion.commit()
     conexion.close()
 
-    # ?guardado=1 dispara el toast verde en el HTML
     return redirect('/asignaciones?guardado=1')
 
 
@@ -1126,7 +1112,7 @@ def eliminar_asignacion(id):
     conexion = conectar()
     cursor   = conexion.cursor()
 
-    cursor.execute("DELETE FROM asignacion WHERE id_asignacion = ?", (id,))
+    cursor.execute("DELETE FROM asignacion WHERE id_asignacion = %s", (id,))
 
     conexion.commit()
     conexion.close()
@@ -1144,11 +1130,11 @@ def editar_asignacion(id):
     conexion = conectar()
     cursor   = conexion.cursor()
 
-    cursor.execute("SELECT * FROM asignacion WHERE id_asignacion = ?", (id,))
+    cursor.execute("SELECT * FROM asignacion WHERE id_asignacion = %s", (id,))
     asignacion = cursor.fetchone()
 
     # Responsables con flag ocupado (excepto el actual)
-    cursor.execute("SELECT id_responsable FROM asignacion WHERE id_asignacion != ?", (id,))
+    cursor.execute("SELECT id_responsable FROM asignacion WHERE id_asignacion != %s", (id,))
     ids_resp = {r['id_responsable'] for r in cursor.fetchall()}
     cursor.execute("SELECT * FROM responsable")
     responsables = []
@@ -1158,7 +1144,7 @@ def editar_asignacion(id):
         responsables.append(d)
 
     # Rutas con flag ocupado (excepto la actual)
-    cursor.execute("SELECT id_ruta FROM asignacion WHERE id_asignacion != ?", (id,))
+    cursor.execute("SELECT id_ruta FROM asignacion WHERE id_asignacion != %s", (id,))
     ids_ruta = {r['id_ruta'] for r in cursor.fetchall()}
     cursor.execute("SELECT * FROM ruta")
     rutas = []
@@ -1199,8 +1185,8 @@ def actualizar_asignacion(id):
 
     cursor.execute("""
         UPDATE asignacion
-        SET fecha = ?, id_responsable = ?, id_ruta = ?, id_camion = ?
-        WHERE id_asignacion = ?
+        SET fecha = %s, id_responsable = %s, id_ruta = %s, id_camion = %s
+        WHERE id_asignacion = %s
     """, (fecha, id_responsable, id_ruta, id_camion, id))
 
     conexion.commit()
@@ -1281,7 +1267,7 @@ def agregar_evidencia():
             archivo,
             id_asignacion
         )
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s)
     """, (
         fecha,
         tipo,
@@ -1350,7 +1336,7 @@ def agregar_observacion():
             fecha,
             id_asignacion
         )
-        VALUES (?, ?, ?)
+        VALUES (%s, %s, %s)
     """, (
         comentario,
         fecha,
@@ -1374,7 +1360,7 @@ def eliminar_observacion(id):
 
     cursor.execute("""
         DELETE FROM observacion
-        WHERE id_observacion = ?
+        WHERE id_observacion = %s
     """, (id,))
 
     conexion.commit()
@@ -1394,7 +1380,7 @@ def editar_observacion(id):
 
     cursor.execute("""
         SELECT * FROM observacion
-        WHERE id_observacion = ?
+        WHERE id_observacion = %s
     """, (id,))
 
     observacion = cursor.fetchone()
@@ -1429,10 +1415,10 @@ def actualizar_observacion(id):
 
     cursor.execute("""
         UPDATE observacion
-        SET comentario = ?,
-            fecha = ?,
-            id_asignacion = ?
-        WHERE id_observacion = ?
+        SET comentario = %s,
+            fecha = %s,
+            id_asignacion = %s
+        WHERE id_observacion = %s
     """, (
         comentario,
         fecha,
@@ -1502,7 +1488,7 @@ def agregar_reporte():
             estado,
             id_colonia
         )
-        VALUES (?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s)
     """, (
         fecha,
         descripcion,
@@ -1527,7 +1513,7 @@ def eliminar_reporte(id):
 
     cursor.execute("""
         DELETE FROM reporte
-        WHERE id_reporte = ?
+        WHERE id_reporte = %s
     """, (id,))
 
     conexion.commit()
@@ -1547,7 +1533,7 @@ def editar_reporte(id):
 
     cursor.execute("""
         SELECT * FROM reporte
-        WHERE id_reporte = ?
+        WHERE id_reporte = %s
     """, (id,))
 
     reporte = cursor.fetchone()
@@ -1583,11 +1569,11 @@ def actualizar_reporte(id):
 
     cursor.execute("""
         UPDATE reporte
-        SET fecha = ?,
-            descripcion = ?,
-            estado = ?,
-            id_colonia = ?
-        WHERE id_reporte = ?
+        SET fecha = %s,
+            descripcion = %s,
+            estado = %s,
+            id_colonia = %s
+        WHERE id_reporte = %s
     """, (
         fecha,
         descripcion,
@@ -1615,7 +1601,7 @@ def registro():
         cursor = conexion.cursor()
 
         # Verificar si ya existe
-        cursor.execute("SELECT * FROM usuario WHERE usuario=?", (usuario,))
+        cursor.execute("SELECT * FROM usuario WHERE usuario=%s", (usuario,))
         existe = cursor.fetchone()
 
         if existe:
@@ -1624,7 +1610,7 @@ def registro():
 
         cursor.execute("""
             INSERT INTO usuario (nombre, usuario, contrasena, rol)
-            VALUES (?, ?, ?, 'ciudadano')
+            VALUES (%s, %s, %s, 'ciudadano')
         """, (nombre, usuario, contrasena))
 
         conexion.commit()
@@ -1648,7 +1634,7 @@ def panel_ciudadano():
 
     cursor.execute("""
         SELECT * FROM reporte_ciudadano
-        WHERE id_usuario = ?
+        WHERE id_usuario = %s
         ORDER BY fecha DESC
     """, (session['id_usuario'],))
 
@@ -1676,7 +1662,7 @@ def nuevo_reporte_ciudadano():
     conexion = conectar()
     cursor = conexion.cursor()
     cursor.execute("SELECT id_colonia, nombre FROM colonia ORDER BY nombre")
-    colonias = cursor.fetchall()  # lista de tuplas (id, nombre)
+    colonias = cursor.fetchall()
     conexion.close()
 
     if request.method == 'POST':
@@ -1704,7 +1690,7 @@ def nuevo_reporte_ciudadano():
             INSERT INTO reporte_ciudadano
             (id_usuario, nombre, id_colonia, direccion,
              tipo, descripcion, evidencia, estado, fecha)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'Pendiente', ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, 'Pendiente', %s)
         """, (
             session['id_usuario'],
             session['nombre'],
@@ -1757,8 +1743,8 @@ def cambiar_estado_reporte(id, estado):
 
     cursor.execute("""
         UPDATE reporte_ciudadano
-        SET estado = ?
-        WHERE id_reporte = ?
+        SET estado = %s
+        WHERE id_reporte = %s
     """, (estado, id))
 
     conexion.commit()
@@ -1807,19 +1793,19 @@ def historial():
     params = []
 
     if fecha_inicio:
-        query += " AND a.fecha >= ?"
+        query += " AND a.fecha >= %s"
         params.append(fecha_inicio)
     if fecha_fin:
-        query += " AND a.fecha <= ?"
+        query += " AND a.fecha <= %s"
         params.append(fecha_fin)
     if id_ruta_filtro:
-        query += " AND r.id_ruta = ?"
+        query += " AND r.id_ruta = %s"
         params.append(id_ruta_filtro)
     if id_responsable_filtro:
-        query += " AND resp.id_responsable = ?"
+        query += " AND resp.id_responsable = %s"
         params.append(id_responsable_filtro)
     if estado_filtro:
-        query += " AND COALESCE(cc.estado, 'Pendiente') = ?"
+        query += " AND COALESCE(cc.estado, 'Pendiente') = %s"
         params.append(estado_filtro)
 
     query += " ORDER BY a.fecha DESC, a.id_asignacion DESC"
@@ -1865,7 +1851,7 @@ def historial():
             'id_responsable': id_responsable_filtro,
             'estado': estado_filtro
         }
-    )        
+    )
 # =====================================
 # EJECUTAR APP
 # =====================================

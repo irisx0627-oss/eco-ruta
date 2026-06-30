@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Reportes Ciudadanos - Admin</title>
+  <style>
+    body { margin:0; font-family:Arial,sans-serif; background:#f0f4f0; }
+    .header {
+      background:#2e7d32; color:white;
+      padding:16px 30px;
+      display:flex; justify-content:space-between; align-items:center;
+    }
+    .header h1 { margin:0; font-size:20px; }
+    .header a {
+      color:white; background:#0c6b35;
+      padding:9px 18px; border-radius:6px;
+      text-decoration:none; font-size:13px;
+      font-weight:bold;
+      border:1px solid rgba(255,255,255,0.35);
+      transition:0.3s;
+    }
+    .header a:hover { background:#14532d; }
+    .contenido { padding:30px; }
+    table {
+      width:100%; border-collapse:collapse;
+      background:white; border-radius:10px;
+      overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.08);
+    }
+    th {
+      background:#2e7d32; color:white;
+      padding:12px; text-align:left; font-size:13px;
+    }
+    td { padding:11px 12px; font-size:13px; border-bottom:1px solid #eee; }
+    .badge { padding:4px 10px; border-radius:20px; font-size:12px; font-weight:bold; }
+    .Pendiente { background:#fff3e0; color:#e65100; }
+    .Revisado  { background:#e3f2fd; color:#1565c0; }
+    .Atendido  { background:#e8f5e9; color:#2e7d32; }
+    .acciones a {
+      display:inline-block; margin:2px;
+      padding:5px 10px; border-radius:5px;
+      text-decoration:none; font-size:12px; color:white;
+    }
+    .btn-rev  { background:#1565c0; }
+    .btn-aten { background:#2e7d32; }
+    img.thumb { width:60px; border-radius:4px; cursor:pointer; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>📬 Reportes de Ciudadanos</h1>
+    <a href="/index">← Volver al inicio</a>
+  </div>
+
+  <div class="contenido">
+    <table>
+      <tr>
+        <th>#</th>
+        <th>Ciudadano</th>
+        <th>Colonia / Dirección</th>
+        <th>Tipo</th>
+        <th>Descripción</th>
+        <th>Foto</th>
+        <th>Estado</th>
+        <th>Fecha</th>
+        <th>Acciones</th>
+      </tr>
+      {% for r in reportes %}
+      <tr>
+        <td>{{ r.id_reporte }}</td>
+        <td>{{ r.nombre }}</td>
+        <td>{{ r.colonia }}<br><small>{{ r.direccion }}</small></td>
+        <td>{{ r.tipo }}</td>
+        <td>{{ r.descripcion }}</td>
+        <td>
+          {% if r.evidencia %}
+            <img class="thumb"
+              src="{{ url_for('static', filename='uploads/' + r.evidencia) }}"
+              onclick="window.open(this.src)">
+          {% else %}
+            <small style="color:#aaa">Sin foto</small>
+          {% endif %}
+        </td>
+        <td><span class="badge {{ r.estado }}">{{ r.estado }}</span></td>
+        <td>{{ r.fecha }}</td>
+        <td class="acciones">
+          <a href="/admin/cambiar_estado/{{ r.id_reporte }}/Revisado"
+             class="btn-rev">✅ Revisado</a>
+          <a href="/admin/cambiar_estado/{{ r.id_reporte }}/Atendido"
+             class="btn-aten">✔️ Atendido</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro - ECO-RUTA</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f0f4f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .card {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      width: 350px;
+    }
+    h2 {
+      color: #2e7d32;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    label {
+      font-size: 13px;
+      color: #555;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 6px 0 14px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 11px;
+      background-color: #2e7d32;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 15px;
+    }
+    button:hover { background-color: #1b5e20; }
+    .error {
+      color: red;
+      font-size: 13px;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .link {
+      text-align: center;
+      margin-top: 14px;
+      font-size: 13px;
+    }
+    .link a { color: #2e7d32; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>🌿 Crear Cuenta</h2>
+
+    {% if error %}
+      <p class="error">{{ error }}</p>
+    {% endif %}
+
+    <form action="/registro" method="POST">
+      <label>Nombre completo</label>
+      <input type="text" name="nombre" placeholder="Tu nombre" required>
+
+      <label>Usuario</label>
+      <input type="text" name="usuario" placeholder="Elige un usuario" required>
+
+      <label>Contraseña</label>
+      <input type="password" name="contrasena" placeholder="Crea una contraseña" required>
+
+      <button type="submit">Registrarse</button>
+    </form>
+
+    <div class="link">
+      ¿Ya tienes cuenta? <a href="/">Inicia sesión</a>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mi Panel - ECO-RUTA</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: #f0f4f0; }
+    .header {
+      background-color: #2e7d32;
+      color: white;
+      padding: 16px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 { margin: 0; font-size: 20px; }
+    .header a {
+      color: white;
+      background: #c62828;
+      padding: 7px 14px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 13px;
+    }
+    .contenido { padding: 30px; }
+    .bienvenida {
+      background: white;
+      padding: 20px 25px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .bienvenida h2 { color: #2e7d32; margin: 0 0 5px 0; }
+    .btn-nuevo {
+      display: inline-block;
+      background: #2e7d32;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 7px;
+      text-decoration: none;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+    .btn-nuevo:hover { background: #1b5e20; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    th {
+      background-color: #2e7d32;
+      color: white;
+      padding: 12px;
+      text-align: left;
+      font-size: 13px;
+    }
+    td { padding: 11px 12px; font-size: 13px; border-bottom: 1px solid #eee; }
+    .badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .Pendiente  { background: #fff3e0; color: #e65100; }
+    .Revisado   { background: #e3f2fd; color: #1565c0; }
+    .Atendido   { background: #e8f5e9; color: #2e7d32; }
+    .sin-datos  { text-align: center; padding: 30px; color: #888; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>🌿 ECO-RUTA — Mi Panel</h1>
+    <a href="/cerrar_sesion">Cerrar Sesión</a>
+  </div>
+
+  <div class="contenido">
+    <div class="bienvenida">
+      <h2>¡Hola, {{ session['nombre'] }}!</h2>
+      <p style="margin:0; color:#555;">Aquí puedes enviar y ver el estado de tus reportes.</p>
+    </div>
+
+    <a href="/ciudadano/nuevo_reporte" class="btn-nuevo">➕ Nuevo Reporte</a>
+
+    <table>
+      <tr>
+        <th>#</th>
+        <th>Tipo</th>
+        <th>Colonia</th>
+        <th>Descripción</th>
+        <th>Estado</th>
+        <th>Fecha</th>
+      </tr>
+      {% if reportes %}
+        {% for r in reportes %}
+        <tr>
+          <td>{{ r.id_reporte }}</td>
+          <td>{{ r.tipo }}</td>
+          <td>{{ r.colonia }}<br><small style="color:#888">{{ r.direccion }}</small></td>
+          <td>{{ r.descripcion }}</td>
+          <td><span class="badge {{ r.estado }}">{{ r.estado }}</span></td>
+          <td>{{ r.fecha }}</td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="6" class="sin-datos">Aún no tienes reportes. ¡Envía el primero!</td>
+        </tr>
+      {% endif %}
+    </table>
+  </div>
+
+</body>
+</html>

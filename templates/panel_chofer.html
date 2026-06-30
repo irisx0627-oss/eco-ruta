@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Panel Encargado | ECO-RUTA</title>
+
+    <link rel="stylesheet"
+    href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+<body>
+
+<div class="contenedor-panel">
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <div class="logo">
+
+            <h1>ECO-RUTA</h1>
+
+            <p>Panel del Encargado</p>
+
+        </div>
+
+        <nav class="menu">
+
+            <a href="/panel_chofer" class="activo">
+                🚛 Asignaciones
+            </a>
+
+            <a href="/control_chofer">
+               📋 Control Diario
+            </a>
+
+            <a href="/cerrar_sesion" class="cerrar">
+                🔒 Cerrar sesión
+            </a>
+
+        </nav>
+
+    </aside>
+
+    <!-- CONTENIDO -->
+
+    <main class="contenido">
+
+        <!-- HEADER -->
+
+        <div class="header">
+
+            <div>
+
+                <h1>Asignaciones de Choferes</h1>
+
+                <p>
+                    Consulta y actualiza el estado de las rutas asignadas.
+                </p>
+
+            </div>
+
+            <div class="usuario-box">
+
+                <span>
+                    👤 {{ session['usuario'] }}
+                </span>
+
+            </div>
+
+        </div>
+
+        <!-- TARJETAS -->
+
+        <div class="cards">
+
+            <div class="card">
+
+                <h3>Total Asignaciones</h3>
+
+                <p>{{ asignaciones|length }}</p>
+
+            </div>
+
+            <div class="card">
+
+                <h3>Rutas Activas</h3>
+
+                <p>{{ asignaciones|length }}</p>
+
+            </div>
+
+        </div>
+
+        <!-- TABLA -->
+
+        <div class="tabla-container">
+
+            <div class="tabla-header">
+
+                <h2>Últimas Asignaciones</h2>
+
+            </div>
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>ID</th>
+                        <th>Fecha</th>
+                        <th>Responsable</th>
+                        <th>Ruta</th>
+                        <th>Camión</th>
+                        <th>Estado</th>
+                        <th>Observación</th>
+                        <th>Evidencia</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% if asignaciones %}
+
+                        {% for asignacion in asignaciones %}
+
+                        <tr>
+
+                            <td>
+                                {{ asignacion.id_asignacion }}
+                            </td>
+
+                            <td>
+                                {{ asignacion.fecha }}
+                            </td>
+
+                            <td>
+                                {{ asignacion.nombre }}
+                            </td>
+
+                            <td>
+                                {{ asignacion.nombre_ruta }}
+                            </td>
+
+                            <td>
+                                {{ asignacion.placas }}
+                            </td>
+
+                            <!-- ESTADO REAL -->
+                            <td>
+
+                                <span class="estado">
+
+                                    {{ asignacion.estado or 'Pendiente' }}
+
+                                </span>
+
+                            </td>
+
+                            <!-- OBSERVACION -->
+                            <td>
+
+                                {{ asignacion.observacion or 'Sin observación' }}
+
+                            </td>
+
+                            <!-- EVIDENCIA -->
+                            <td>
+
+                                {% if asignacion.evidencia %}
+
+                                    <a
+                                        href="{{ url_for('static', filename='uploads/' + asignacion.evidencia) }}"
+                                        target="_blank"
+                                    >
+                                        Ver archivo
+                                    </a>
+
+                                {% else %}
+
+                                    Sin archivo
+
+                                {% endif %}
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    {% else %}
+
+                        <tr>
+
+                            <td colspan="8" style="text-align:center; padding:20px;">
+
+                                No hay asignaciones registradas.
+
+                            </td>
+
+                        </tr>
+
+                    {% endif %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </main>
+
+</div>
+
+</body>
+
+</html>

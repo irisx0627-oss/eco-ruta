@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Observaciones</title>
+
+    <link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+<body>
+
+<h1>MÓDULO OBSERVACIONES</h1>
+
+<a href="/index">
+Volver al inicio
+</a>
+
+<hr>
+
+<h2>Agregar observación</h2>
+
+<form
+action="/agregar_observacion"
+method="POST"
+>
+
+<label>Comentario</label>
+<br>
+
+<textarea
+name="comentario"
+rows="4"
+cols="40"
+required
+></textarea>
+
+<br><br>
+
+<label>Fecha</label>
+<br>
+
+<input
+type="date"
+name="fecha"
+required
+>
+
+<br><br>
+
+<label>Asignación</label>
+<br>
+
+<select name="id_asignacion">
+
+{% for asignacion in asignaciones %}
+
+<option value="{{ asignacion.id_asignacion }}">
+
+Asignación {{ asignacion.id_asignacion }}
+
+</option>
+
+{% endfor %}
+
+</select>
+
+<br><br>
+
+<button type="submit">
+Guardar
+</button>
+
+</form>
+
+<hr>
+
+<h2>Lista de observaciones</h2>
+
+<table border="1">
+
+<tr>
+
+<th>ID</th>
+<th>Comentario</th>
+<th>Fecha</th>
+<th>Asignación</th>
+<th>Acciones</th>
+
+</tr>
+
+{% for observacion in observaciones %}
+
+<tr>
+
+<td>{{ observacion.id_observacion }}</td>
+
+<td>{{ observacion.comentario }}</td>
+
+<td>{{ observacion.fecha }}</td>
+
+<td>{{ observacion.id_asignacion }}</td>
+
+<td>
+
+<a href="/editar_observacion/{{ observacion.id_observacion }}">
+Editar
+</a>
+
+|
+
+<a href="/eliminar_observacion/{{ observacion.id_observacion }}">
+Eliminar
+</a>
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</body>
+</html>

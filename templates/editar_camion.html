@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Camión</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="contenedor">
+
+    <div class="sidebar">
+        <h1>ECO-RUTA</h1>
+        <p>Sistema de Gestión</p>
+        <div class="linea"></div>
+        <ul>
+            <li><a href="/index">🏠 Inicio</a></li>
+            <li><a href="/colonias">🏘️ Colonias</a></li>
+            <li><a href="/rutas">🛣️ Rutas</a></li>
+            <li><a href="/camiones" class="activo">🚛 Camiones</a></li>
+            <li><a href="/responsables">👤 Responsables</a></li>
+            <li><a href="/asignaciones">📋 Asignaciones</a></li>
+            <li><a href="/evidencias">📄 Evidencias</a></li>
+            <li><a href="/observaciones">👁️ Observaciones</a></li>
+            <li><a href="/reportes">📊 Reportes</a></li>
+        </ul>
+    </div>
+
+    <div class="contenido">
+
+        <div class="header">
+            <h1>✏️ EDITAR CAMIÓN</h1>
+            <a href="/camiones" class="btn-regresar">← Volver a Camiones</a>
+        </div>
+
+        <div class="card">
+            <form action="/actualizar_camion/{{ camion.id_camion }}" method="POST">
+
+                <div class="grupo">
+                    <label>Placas</label>
+                    <input type="text" name="placas"
+                           value="{{ camion.placas }}" required>
+                </div>
+
+                <div class="grupo">
+                    <label>Capacidad KG</label>
+                    <input type="number" step="0.01" name="capacidad_kg"
+                           value="{{ camion.capacidad_kg }}" required>
+                </div>
+
+                <div class="grupo">
+                    <label>Estado</label>
+                    <select name="estado">
+                        <option {% if camion.estado == 'Activo' %}selected{% endif %}>
+                            Activo
+                        </option>
+                        <option {% if camion.estado == 'En mantenimiento' %}selected{% endif %}>
+                            En mantenimiento
+                        </option>
+                        <option {% if camion.estado == 'Fuera de servicio' %}selected{% endif %}>
+                            Fuera de servicio
+                        </option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-guardar">💾 Actualizar</button>
+                <a href="/camiones" class="btn-cancelar">✖ Cancelar</a>
+
+            </form>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

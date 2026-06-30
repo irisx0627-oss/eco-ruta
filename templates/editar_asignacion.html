@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Asignación</title>
+
+    <link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+<body>
+
+<h1>EDITAR ASIGNACIÓN</h1>
+
+<form
+action="/actualizar_asignacion/{{ asignacion.id_asignacion }}"
+method="POST"
+>
+
+<label>Fecha</label>
+<br>
+
+<input
+type="date"
+name="fecha"
+value="{{ asignacion.fecha }}"
+required>
+
+<br><br>
+
+<label>Responsable</label>
+<br>
+
+<select name="id_responsable">
+
+{% for responsable in responsables %}
+
+<option
+value="{{ responsable.id_responsable }}"
+{% if responsable.id_responsable == asignacion.id_responsable %}
+selected
+{% endif %}
+>
+
+{{ responsable.nombre }}
+
+</option>
+
+{% endfor %}
+
+</select>
+
+<br><br>
+
+<label>Ruta</label>
+<br>
+
+<select name="id_ruta">
+
+{% for ruta in rutas %}
+
+<option
+value="{{ ruta.id_ruta }}"
+{% if ruta.id_ruta == asignacion.id_ruta %}
+selected
+{% endif %}
+>
+
+{{ ruta.nombre_ruta }}
+
+</option>
+
+{% endfor %}
+
+</select>
+
+<br><br>
+
+<label>Camión</label>
+<br>
+
+<select name="id_camion">
+
+{% for camion in camiones %}
+
+<option
+value="{{ camion.id_camion }}"
+{% if camion.id_camion == asignacion.id_camion %}
+selected
+{% endif %}
+>
+
+{{ camion.placas }}
+
+</option>
+
+{% endfor %}
+
+</select>
+
+<br><br>
+
+<button type="submit">
+Actualizar
+</button>
+
+</form>
+
+</body>
+</html>

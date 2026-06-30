@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reportes</title>
+
+    <link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+<body>
+
+<h1>MÓDULO REPORTES</h1>
+
+<a href="/index">
+Volver al inicio
+</a>
+
+<hr>
+
+<h2>Agregar reporte</h2>
+
+<form
+action="/agregar_reporte"
+method="POST"
+>
+
+<label>Fecha</label>
+<br>
+
+<input
+type="date"
+name="fecha"
+required
+>
+
+<br><br>
+
+<label>Descripción</label>
+<br>
+
+<textarea
+name="descripcion"
+rows="4"
+cols="40"
+required
+></textarea>
+
+<br><br>
+
+<label>Estado</label>
+<br>
+
+<select name="estado">
+
+<option>Pendiente</option>
+<option>En proceso</option>
+<option>Resuelto</option>
+
+</select>
+
+<br><br>
+
+<label>Colonia</label>
+<br>
+
+<select name="id_colonia">
+
+{% for colonia in colonias %}
+
+<option value="{{ colonia.id_colonia }}">
+
+{{ colonia.nombre }}
+
+</option>
+
+{% endfor %}
+
+</select>
+
+<br><br>
+
+<button type="submit">
+Guardar
+</button>
+
+</form>
+
+<hr>
+
+<h2>Lista de reportes</h2>
+
+<table border="1">
+
+<tr>
+
+<th>ID</th>
+<th>Fecha</th>
+<th>Descripción</th>
+<th>Estado</th>
+<th>Colonia</th>
+<th>Acciones</th>
+
+</tr>
+
+{% for reporte in reportes %}
+
+<tr>
+
+<td>{{ reporte.id_reporte }}</td>
+
+<td>{{ reporte.fecha }}</td>
+
+<td>{{ reporte.descripcion }}</td>
+
+<td>{{ reporte.estado }}</td>
+
+<td>{{ reporte.nombre_colonia }}</td>
+
+<td>
+
+<a href="/editar_reporte/{{ reporte.id_reporte }}">
+Editar
+</a>
+
+|
+
+<a href="/eliminar_reporte/{{ reporte.id_reporte }}">
+Eliminar
+</a>
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</body>
+</html>
